@@ -1,0 +1,7 @@
+- name: Install dotfiles
+  hosts: localhost
+  roles:
+    - role: gbraad.dotfiles
+      vars:
+        user: gbraad
+

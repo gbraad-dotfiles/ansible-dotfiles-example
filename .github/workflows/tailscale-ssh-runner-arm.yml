@@ -1,0 +1,111 @@
+name: tailscale-ssh-runner-arm
+run-name: Tailscale SSH with Ansible role on Arm
+
+on:
+  workflow_dispatch:
+
+jobs:
+  dotfiles-test-arm:
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Remove unwanted stuff
+        uses: gbraad-devenv/remove-unwanted@v1
+
+      - name: Tailscale
+        uses: gbraad-actions/tailscale-action@v1
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          args: --ssh --accept-dns=false --operator=runner
+          hostname: ansible-dotfiles-arm
+
+      - name: Usage message
+        run: |
+          IP=`tailscale ip -4`
+          echo "Use the following command to connect \`tailscale ssh runner@${IP}\`"
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+
+      - name: Install Role Dependencies
+        run: |
+          ansible-galaxy install gbraad.dotfiles
+
+      - name: Create and share userdirs
+        run: |
+          cd ${{ github.workspace }}
+          mkdir -p Projects Documents Downloads
+          ln -s ${{ github.workspace }}/Projects  ${HOME}/Projects
+          ln -s ${{ github.workspace }}/Documents ${HOME}/Documents
+          ln -s ${{ github.workspace }}/Downloads ${HOME}/Downloads
+          tailscale drive share projects ${HOME}/Projects
+          tailscale drive share documents ${HOME}/Documents
+          tailscale drive share downloads ${HOME}/Downloads
+
+      - name: Run Ansible Playbook
+        run: |
+          ansible-playbook site.yml -e user=${USER}
+
+      - name: Install required virtualization software
+        continue-on-error: true
+        run: |
+          sudo apt-get update
+          sudo apt install -y \
+            qemu-kvm libvirt-daemon libvirt-daemon-system virtiofsd virt-manager
+          sudo usermod -a -G libvirt $USER
+
+      - name: Hang around
+        run: |
+          sleep 18000
+
+      - name: Message user; 1 hour
+        run: |
+          sudo wall "about 1 hour remaining"
+          sleep 1800
+
+      - name: Message user; 20 minutes
+        run: |
+          sudo wall "20 minutes remaining"
+          sleep 1200
+
+      - name: Upload Artifact - Projects
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: projects
+          path: ${{ github.workspace }}/Projects/
+          retention-days: 1
+          include-hidden-files: true
+
+      - name: Upload Artifact - Documents
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: documents
+          path: ${{ github.workspace }}/Documents/
+          retention-days: 1
+          include-hidden-files: true
+
+      - name: Upload Artifact - Downloads
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: downloads
+          path: ${{ github.workspace }}/Downloads/
+          retention-days: 1
+          include-hidden-files: true
+
+      - name: Hang around
+        run: |
+          sleep infinity
+

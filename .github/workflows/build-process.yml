@@ -1,0 +1,38 @@
+name: ansible-dotfiles-test
+run-name: Test Ansible role 'gbraad.dotfiles'
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 */2 * *"
+  push:
+    branches:
+      - "main"
+  pull_request: {}
+  
+
+jobs:
+  run-ansible-role:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+
+      - name: Install Role Dependencies
+        run: |
+          ansible-galaxy install gbraad.dotfiles
+
+      - name: Run Ansible Playbook
+        run: |
+          ansible-playbook site.yml -e user=${USER}

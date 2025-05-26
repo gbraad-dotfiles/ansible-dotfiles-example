@@ -20,7 +20,7 @@
     - name: Make clean and cross compile
       ansible.builtin.shell: |
          source ~/.dotfiles/source.sh
-         devenv gofedora exec su -l gbraad -c "cd ~/Projects/crc-org/crc && make clean && make cross"
+         devenv gofedora exec su -l gbraad -c "cd ~/Projects/crc && make clean && make cross"
       args:
         executable: /bin/zsh
 

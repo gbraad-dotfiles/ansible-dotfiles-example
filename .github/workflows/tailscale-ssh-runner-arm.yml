@@ -40,6 +40,7 @@ jobs:
       - name: Install Role Dependencies
         run: |
           ansible-galaxy install gbraad.dotfiles
+          ansible-galaxy install gbraad.dotfiles-devenv
 
       - name: Create and share userdirs
         run: |

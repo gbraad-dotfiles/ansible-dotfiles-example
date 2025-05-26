@@ -1,0 +1,32 @@
+- hosts: localhost
+  vars:
+    projects_dir: "{{ ansible_env.HOME }}/Projects"
+    crc_repo_url: "https://github.com/crc-org/crc"
+    crc_repo_dest: "{{ projects_dir }}/crc"
+  tasks:
+    - name: Ensure ~/Projects directory exists
+      ansible.builtin.file:
+        path: "{{ projects_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Clone crc repo to ~/Projects/crc
+      ansible.builtin.git:
+        repo: "{{ crc_repo_url }}"
+        dest: "{{ crc_repo_dest }}"
+        version: main
+        update: yes
+
+    - name: Make clean and cross compile
+      ansible.builtin.shell: |
+         source ~/.dotfiles/source.sh
+         devenv gofedora exec su -l gbraad -c "cd ~/Projects/crc-org/crc && make clean && make cross"
+      args:
+        executable: /bin/zsh
+
+  roles:
+    - role: gbraad.dotfiles
+    - role: gbraad.dotfiles-devenv
+      vars:
+        prefix: gofedora
+        command: start

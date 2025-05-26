@@ -5,3 +5,18 @@
       vars:
         user: gbraad
 
+    - role: gbraad.dotfiles-devenv
+      vars:
+        prefix: dotfedora
+        command: system
+
+    - role: gbraad.dotfiles-devenv
+      vars:
+        prefix: dotfedora
+        command: exec
+        args: cat /etc/os-release
+
+    - role: gbraad.dotfiles-devenv
+      vars:
+        prefix: dotfedora
+        command: remove
